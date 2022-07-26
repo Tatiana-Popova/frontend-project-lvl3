@@ -1,7 +1,7 @@
-// const path = require('path');
-// const HTMLWebpackPlugin = require('html-webpack-plugin');
-// const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-// const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const path = require('path');
+const HTMLWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 // module.exports = {
 //   mode: process.env.NODE_ENV || 'development',
@@ -50,27 +50,9 @@
 //   },
 // };
 
-// const path = require('path');
-// const HtmlWebpackPlugin = require('html-webpack-plugin');
-
-// const config = {
-//   mode: process.env.NODE_ENV || 'development',
-//   entry: './src/index.js',
-//   output: {
-//     filename: 'bundle.js',
-//     path: path.resolve(__dirname, 'dist'),
-//   },
-// };
-
-// module.exports = config;
-
-const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const config = {
-  // mode: 'development',
-  // mode: 'production',
-  // mode: 'none',
   mode: process.env.NODE_ENV || 'development',
   entry: './src/index.js',
   output: {
@@ -107,6 +89,10 @@ const config = {
     new HtmlWebpackPlugin({
       template: 'index.html',
     }),
+    new CleanWebpackPlugin(),
+    // new MiniCssExtractPlugin({
+    //   filename: '[contenthash].bundle.css',
+    // }),
   ],
 };
 
