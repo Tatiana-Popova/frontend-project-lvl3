@@ -9,4 +9,4 @@
 
 ### Demo:
 
-https://vercel.com/new/success?developer-id=&external-id=&redirect-url=&branch=main&deploymentUrl=frontend-project-lvl3-bo114ua5t-tatiana-popova.vercel.app&projectName=frontend-project-lvl3
+https://frontend-project-lvl3-iota-navy.vercel.app
