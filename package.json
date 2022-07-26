@@ -21,6 +21,9 @@
   },
   "homepage": "https://github.com/Tatiana-Popova/frontend-project-lvl3#readme",
   "devDependencies": {
+    "@babel/core": "^7.18.9",
+    "@babel/preset-env": "^7.18.9",
+    "babel-loader": "^8.2.5",
     "clean-webpack-plugin": "^4.0.0",
     "css-loader": "^6.7.1",
     "eslint": "^8.19.0",
