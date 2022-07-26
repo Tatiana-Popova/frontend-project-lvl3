@@ -1,8 +1,3 @@
-const path = require('path');
-const HTMLWebpackPlugin = require('html-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
 // module.exports = {
 //   mode: process.env.NODE_ENV || 'development',
 //   entry: './src/index.js',
@@ -51,12 +46,15 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 // };
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const path = require('path');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const config = {
   mode: process.env.NODE_ENV || 'development',
   entry: './src/index.js',
   output: {
-    filename: 'bundle.js',
+    filename: '[contenthash].bundle.js',
     path: path.resolve(__dirname, 'dist'),
   },
   devServer: {
@@ -74,7 +72,7 @@ const config = {
           },
         },
       },
-      { test: /\.css$/, use: ['style-loader', 'css-loader'] },
+      { test: /\.css$/, use: [MiniCssExtractPlugin.loader, 'css-loader'] },
       {
         test: /\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
         use: 'url-loader?limit=10000',
@@ -90,9 +88,9 @@ const config = {
       template: 'index.html',
     }),
     new CleanWebpackPlugin(),
-    // new MiniCssExtractPlugin({
-    //   filename: '[contenthash].bundle.css',
-    // }),
+    new MiniCssExtractPlugin({
+      filename: '[contenthash].bundle.css',
+    }),
   ],
 };
 
