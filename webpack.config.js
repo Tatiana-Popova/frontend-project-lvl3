@@ -4,7 +4,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
-  mode: 'development',
+  mode: process.env.NODE_ENV || 'development',
   entry: './src/index.js',
   output: {
     filename: '[contenthash].bundle.js',
@@ -38,6 +38,14 @@ module.exports = {
         test: /\.css$/,
         use: [MiniCssExtractPlugin.loader, 'css-loader'],
       },
+      {
+        test: /\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+        use: 'url-loader?limit=10000',
+      },
+      {
+        test: /\.(ttf|eot|svg)(\?[\s\S]+)?$/,
+        use: 'file-loader',
+      },
     ],
   },
 };
@@ -52,37 +60,6 @@ module.exports = {
 //     filename: 'bundle.js',
 //     path: path.resolve(__dirname, 'dist'),
 //   },
-//   module: {
-//     rules: [
-//       {
-//         test: /\.js$/,
-//         exclude: /node_modules/,
-//         use: {
-//           loader: 'babel-loader',
-//           options: {
-//             presets: ['@babel/preset-env'],
-//           },
-//         },
-//       },
-//       {
-//         test: /\.css$/,
-//         use: ['style-loader', 'css-loader'],
-//       },
-//       {
-//         test: /\.woff2?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-//         use: 'url-loader?limit=10000',
-//       },
-//       {
-//         test: /\.(ttf|eot|svg)(\?[\s\S]+)?$/,
-//         use: 'file-loader',
-//       },
-//     ],
-//   },
-//   plugins: [
-//     new HtmlWebpackPlugin({
-//       template: 'index.html',
-//     }),
-//   ],
 // };
 
 // module.exports = config;
