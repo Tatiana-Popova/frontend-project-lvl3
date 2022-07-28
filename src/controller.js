@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 
-const checkInputValid = async (state, e) => {
+const checkInputValid = async (watchedState, e) => {
   const formData = new FormData(e.target);
   const url = formData.get('url');
 
@@ -10,6 +10,7 @@ const checkInputValid = async (state, e) => {
     .isValid(url)
     .then((isvalid) => {
       watchedState.uiState.inputForm.valid = isvalid;
+      console.log(watchedState);
     })
     .catch((err) => {
       console.log('Your error is ', err);

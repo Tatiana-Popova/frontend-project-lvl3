@@ -25,7 +25,7 @@ const app = () => {
 
   state.elements.inputForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    checkInputValid(state, e);
+    checkInputValid(watchedState, e);
   });
 };
 
