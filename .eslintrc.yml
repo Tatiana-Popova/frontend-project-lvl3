@@ -6,3 +6,5 @@ extends:
   - airbnb-base
 parserOptions:
   ecmaVersion: latest
+rules:
+  no-param-reassign: 0
