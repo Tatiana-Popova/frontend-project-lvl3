@@ -1,6 +1,6 @@
 import onChange from 'on-change';
 import i18next from 'i18next';
-import resources from './locales/ru';
+import resources from './locales/index';
 import { successInput, dangerInput } from './view';
 import checkInputValid from './controller';
 

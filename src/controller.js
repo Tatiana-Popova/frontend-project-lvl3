@@ -1,27 +1,37 @@
 import * as yup from 'yup';
+// import { setLocale } from 'yup';
 
 const checkInputValid = async (i18, watchedState, e) => {
+  yup.setLocale({
+    mixed: {
+      notOneOf: i18.t('feedbackExisting'),
+      default: 'heh',
+    },
+    string: {
+      url: i18.t('feedbackNotValid'),
+    },
+  });
   const formData = new FormData(e.target);
   const url = formData.get('url');
 
-  const schema = yup.string().required().url().matches(['rss']);
+  const schema = yup
+    .string()
+    .required()
+    .url()
+    .matches(['rss'])
+    .notOneOf([...watchedState.rssUrls]);
   return schema
-    .isValid(url)
+    .validate(url)
     .then((isvalid) => {
-      if (watchedState.rssUrls.includes(url)) {
-        watchedState.uiState.inputForm.valid = false;
-        watchedState.uiState.feedbackStatus = i18.t('feedbackExisting');
-      } else if (isvalid) {
+      if (isvalid) {
         watchedState.rssUrls.push(url);
         watchedState.uiState.inputForm.valid = true;
         watchedState.uiState.feedbackStatus = i18.t('feedbackSucсsess');
-      } else {
-        watchedState.uiState.inputForm.valid = false;
-        watchedState.uiState.feedbackStatus = i18.t('feedbackNotValid');
       }
     })
     .catch((err) => {
-      console.log('Your error is ', err);
+      watchedState.uiState.inputForm.valid = false;
+      watchedState.uiState.feedbackStatus = err.errors;
     });
 };
 
