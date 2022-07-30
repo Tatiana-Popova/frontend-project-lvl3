@@ -1,32 +1,46 @@
 import onChange from 'on-change';
-import addRedFrame from './view';
+import i18next from 'i18next';
+import resources from './locales/ru';
+import { successInput, dangerInput } from './view';
 import checkInputValid from './controller';
 
 const app = () => {
-  const state = {
-    uiState: {
-      inputForm: {
-        valid: false,
-        url: '',
-      },
-    },
-    elements: {
-      input: document.querySelector('#url-input'),
-      inputForm: document.querySelector('.rss-form'),
-    },
-  };
+  const i18 = i18next.createInstance();
+  i18
+    .init({
+      lng: 'ru',
+      debug: true,
+      resources,
+    })
+    .then(() => {
+      const state = {
+        uiState: {
+          inputForm: {
+            valid: '',
+            url: '',
+          },
+          feedbackStatus: '',
+        },
+        elements: {
+          input: document.querySelector('#url-input'),
+          inputForm: document.querySelector('.rss-form'),
+          feedback: document.querySelector('.feedback'),
+        },
+        rssUrls: [],
+      };
+      const watchedState = onChange(state, () => {
+        if (state.uiState.inputForm.valid === false) {
+          dangerInput(state);
+        } else {
+          successInput(state);
+        }
+      });
 
-  const watchedState = onChange(state, (path, value) => {
-    console.log('smth changed', 'watchedState from app = ', watchedState);
-    if (state.inputForm.valid === false) {
-      addRedFrame(watchedState);
-    }
-  });
-
-  state.elements.inputForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    checkInputValid(watchedState, e);
-  });
+      state.elements.inputForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        checkInputValid(i18, watchedState, e);
+      });
+    });
 };
 
 export default app;
