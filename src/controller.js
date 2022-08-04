@@ -1,6 +1,5 @@
 import * as yup from 'yup';
 import axios from 'axios';
-import * as _ from 'lodash';
 
 export const checkInputValid = async (i18, watchedState, e) => {
   yup.setLocale({
@@ -30,10 +29,10 @@ export const checkInputValid = async (i18, watchedState, e) => {
         watchedState.uiState.feedbackStatus = i18.t('feedbackSucсsess');
       }
     })
-    .catch((err) => {
+    .catch((error) => {
       watchedState.uiState.inputForm.valid = false;
-      console.log('err state ', err);
-      watchedState.uiState.feedbackStatus = err.errors;
+      watchedState.uiState.errors = [...watchedState.uiState.errors, error.errors];
+      watchedState.uiState.feedbackStatus = error.errors;
     });
 };
 
@@ -44,18 +43,19 @@ const createProxyToDownloadStreams = (rssUrl) => {
   return url;
 };
 
-const downloadStream = (url) => {
+const downloadStream = (url, watchedState) => {
   const allOriginsUrl = createProxyToDownloadStreams(url);
   return axios
     .get(allOriginsUrl.href)
     .then((response) => response.data.contents)
     .catch((error) => {
-      console.log('downloadStream', error);
+      watchedState.uiState.errors = [...watchedState.uiState.errors, error.errors];
+      watchedState.uiState.feedbackStatus = error.errors;
       throw new Error(error);
     });
 };
 
-const parseResponse = (stream, feedCounter) => {
+const parseResponse = (stream, feedCounter, watchedState) => {
   const parser = new DOMParser();
   return Promise.resolve(stream)
     .then((xmlString) => parser.parseFromString(xmlString, 'application/xml'))
@@ -66,41 +66,38 @@ const parseResponse = (stream, feedCounter) => {
       const feedDescription = dom.querySelector('description').textContent;
       const feedInfo = { feedCounter, feedTitle, feedDescription };
 
-      const parsedDomItems = [];
+      let parsedDomItems = [];
       Array.from(domItems).forEach((item) => {
         const itemTitle = item.querySelector('title').textContent;
         const itemLink = item.querySelector('link').textContent;
         const itemDescription = item.querySelector('description').textContent;
         itemCounter += 1;
-        parsedDomItems.push({ itemCounter, feedCounter, itemTitle, itemLink, itemDescription });
+        parsedDomItems = [
+          ...parsedDomItems,
+          { itemCounter, feedCounter, itemTitle, itemLink, itemDescription },
+        ];
       });
-      return [feedInfo, _.cloneDeep(parsedDomItems)];
+      return [feedInfo, parsedDomItems];
     })
     .catch((error) => {
-      console.log('dataResponse', error);
+      watchedState.uiState.errors = [...watchedState.uiState.errors, error.errors];
+      watchedState.uiState.feedbackStatus = error.errors;
       throw new Error(error);
     });
 };
 
-export const uploadFeed = (watchedState, url, feedCounter) =>
-  downloadStream(url)
-    .then((stream) => parseResponse(stream, feedCounter))
+export const uploadFeed = (watchedState, url, feedCounter) => {
+  downloadStream(url, watchedState)
+    .then((stream) => parseResponse(stream, feedCounter, watchedState))
     .then((response) => {
       const feedInfo = response[0];
       const parsedItems = response[1];
       watchedState.feeds.push(feedInfo);
-
-      watchedState.posts = [...watchedState.posts, response[1]];
-      console.log(
-        'watchedState',
-        watchedState,
-        'watchedState.posts',
-        watchedState.posts,
-        'response[1]',
-        response[1],
-      );
+      watchedState.posts = [...watchedState.posts, parsedItems];
     })
     .catch((error) => {
-      console.log('uploadFeed error', error);
+      watchedState.uiState.errors = [...watchedState.uiState.errors, error.errors];
+      watchedState.uiState.feedbackStatus = error.errors;
       throw new Error(error);
     });
+};

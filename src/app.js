@@ -20,6 +20,7 @@ const app = () => {
             url: '',
           },
           feedbackStatus: '',
+          errors: [],
         },
         elements: {
           input: document.querySelector('#url-input'),
@@ -32,12 +33,15 @@ const app = () => {
         feeds: [],
         posts: [],
       };
-      const watchedState = onChange(state, (path, value) => {
+      const watchedState = onChange(state, (path) => {
+        if (path === 'uiState.errors') {
+          dangerInput(state);
+        }
         if (state.uiState.inputForm.valid === false) {
           dangerInput(state);
         } else {
           successInput(state);
-          if (path === 'feeds') {
+          if (path === 'feeds' || path === 'posts') {
             renderContent(state);
           }
         }

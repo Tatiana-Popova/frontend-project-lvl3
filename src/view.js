@@ -1,8 +1,6 @@
-import * as _ from 'lodash';
-
 export const dangerInput = (state) => {
   state.elements.input.classList.add('is-invalid');
-  state.elements.feedback.innerHTML = state.uiState.feedbackStatus;
+  state.elements.feedback.textContent = state.uiState.feedbackStatus;
   state.elements.feedback.classList.remove('text-success');
   state.elements.feedback.classList.add('text-danger');
   state.elements.inputForm.focus();
@@ -10,7 +8,7 @@ export const dangerInput = (state) => {
 
 export const successInput = (state) => {
   state.elements.input.classList.remove('is-invalid');
-  state.elements.feedback.innerHTML = state.uiState.feedbackStatus;
+  state.elements.feedback.textContent = state.uiState.feedbackStatus;
   state.elements.feedback.classList.remove('text-danger');
   state.elements.feedback.classList.add('text-success');
   state.elements.inputForm.reset();
@@ -66,6 +64,7 @@ const renderPosts = (state) => {
     state.elements.postLi = document.createElement('li');
     state.elements.postHref = document.createElement('a');
     state.elements.postButton = document.createElement('button');
+    state.elements.postHref.setAttribute('href', post.itemLink);
     state.elements.postLi.classList.add(
       'list-group-item',
       'd-flex',
@@ -85,7 +84,6 @@ const renderPosts = (state) => {
 };
 
 export const renderContent = (state) => {
-  console.log(state, state.posts);
   renderFeeds(state);
   renderPosts(state);
 };
