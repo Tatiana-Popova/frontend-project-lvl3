@@ -1,5 +1,6 @@
 import * as yup from 'yup';
 import axios from 'axios';
+import * as _ from 'lodash';
 
 export const checkInputValid = async (i18, watchedState, e) => {
   yup.setLocale({
@@ -24,15 +25,14 @@ export const checkInputValid = async (i18, watchedState, e) => {
     .validate(url)
     .then((isvalid) => {
       if (isvalid) {
-        watchedState.rssUrls.push(url);
         watchedState.uiState.inputForm.valid = true;
-        watchedState.uiState.feedbackStatus = i18.t('feedbackSucсsess');
+        watchedState.uiState.inputForm.status = i18.t('feedbackSucсess');
       }
     })
     .catch((error) => {
       watchedState.uiState.inputForm.valid = false;
-      watchedState.uiState.errors = [...watchedState.uiState.errors, error.errors];
-      watchedState.uiState.feedbackStatus = error.errors;
+      watchedState.uiState.inputForm.status = error.errors;
+      throw new Error(error);
     });
 };
 
@@ -49,8 +49,8 @@ const downloadStream = (url, watchedState) => {
     .get(allOriginsUrl.href)
     .then((response) => response.data.contents)
     .catch((error) => {
-      watchedState.uiState.errors = [...watchedState.uiState.errors, error.errors];
-      watchedState.uiState.feedbackStatus = error.errors;
+      watchedState.uiState.feeds.error = [...watchedState.uiState.feeds.error, error];
+      watchedState.uiState.feeds.error = error;
       throw new Error(error);
     });
 };
@@ -64,40 +64,113 @@ const parseResponse = (stream, feedCounter, watchedState) => {
       let itemCounter = 0;
       const feedTitle = dom.querySelector('title').textContent;
       const feedDescription = dom.querySelector('description').textContent;
-      const feedInfo = { feedCounter, feedTitle, feedDescription };
+      const feedLink = dom.querySelector('link').textContent;
+      const feedInfo = { feedCounter, feedTitle, feedDescription, feedLink };
 
       let parsedDomItems = [];
       Array.from(domItems).forEach((item) => {
         const itemTitle = item.querySelector('title').textContent;
         const itemLink = item.querySelector('link').textContent;
         const itemDescription = item.querySelector('description').textContent;
+        const pubDate = item.querySelector('pubDate').textContent;
         itemCounter += 1;
         parsedDomItems = [
           ...parsedDomItems,
-          { itemCounter, feedCounter, itemTitle, itemLink, itemDescription },
+          { itemCounter, feedCounter, itemTitle, itemLink, itemDescription, pubDate },
         ];
       });
-      return [feedInfo, parsedDomItems];
+      if (watchedState.rssUrls.includes(feedLink)) {
+        const sameResourseCounter = _.last(
+          watchedState.feeds.filter((feed) => feed.feedLink === feedLink),
+        ).feedCounter;
+        const sameResoursePosts = watchedState.posts
+          .filter((post) => post.feedCounter === sameResourseCounter)
+          .sort((a, b) => (a.pubDate > b.pubDate ? 1 : -1));
+        const lastSameResorsePostDate = _.last(sameResoursePosts).pubDate;
+        const sameResourseNewPosts = parsedDomItems.filter(
+          (post) => post.pubDate > lastSameResorsePostDate,
+        );
+        return ['new', sameResourseNewPosts];
+      }
+
+      return ['old', feedInfo, parsedDomItems];
     })
     .catch((error) => {
-      watchedState.uiState.errors = [...watchedState.uiState.errors, error.errors];
-      watchedState.uiState.feedbackStatus = error.errors;
+      watchedState.uiState.feeds.error = [...watchedState.uiState.feeds.error, error];
       throw new Error(error);
     });
 };
 
-export const uploadFeed = (watchedState, url, feedCounter) => {
+export const uploadFeed = (watchedState, e, feedCounter) => {
+  const formData = new FormData(e.target);
+  const url = formData.get('url');
   downloadStream(url, watchedState)
     .then((stream) => parseResponse(stream, feedCounter, watchedState))
     .then((response) => {
-      const feedInfo = response[0];
-      const parsedItems = response[1];
-      watchedState.feeds.push(feedInfo);
+      const feedInfo = response[1];
+      const parsedItems = response[2];
+      watchedState.feeds = [...watchedState.feeds, feedInfo];
       watchedState.posts = [...watchedState.posts, parsedItems];
+      watchedState.uiState.feeds.status = 'loadingSourcePosts';
+      watchedState.uiState.feeds.status = 'sourcePostsAreLoaded';
+      watchedState.rssUrls.push(url);
     })
     .catch((error) => {
-      watchedState.uiState.errors = [...watchedState.uiState.errors, error.errors];
-      watchedState.uiState.feedbackStatus = error.errors;
+      watchedState.uiState.feeds.error = [...watchedState.uiState.feeds.error, error];
       throw new Error(error);
     });
+};
+
+export const uploadNewPosts = (watchedState, feedCounter) => {
+  Promise.resolve()
+    .then(() => {
+      watchedState.rssUrls.forEach((rssUrl) => {
+        downloadStream(rssUrl, watchedState)
+          .then((stream) => parseResponse(stream, feedCounter, watchedState))
+          .then((newPosts) => {
+            if (newPosts[0] === 'old') {
+              return;
+            }
+            console.log('newPosts', newPosts);
+            watchedState.uiState.newPostsToUpload = newPosts;
+          })
+          .catch((error) => {
+            watchedState.uiState.feeds.error = [...watchedState.uiState.feeds.error, error];
+          });
+      });
+    })
+    .catch((error) => {
+      watchedState.uiState.inputForm.error = [...watchedState.uiState.feeds.error, error];
+      throw new Error(error);
+    })
+    .finally(() => {
+      setTimeout(uploadNewPosts, 5000, watchedState, feedCounter);
+    });
+};
+
+const markAsRead = (element, watchedState) => {
+  const { href } = element;
+  watchedState.viewedPostLinks = [...watchedState.viewedPostLinks, href];
+  watchedState.uiState.feeds.status = 'updatingViewedPosts';
+};
+
+export const handlePostClick = (element, watchedState) => {
+  switch (element.tagName) {
+    case 'A':
+      markAsRead(element, watchedState);
+      break;
+    case 'BUTTON':
+      {
+        const a = element.parentNode.querySelector('a');
+        markAsRead(a, watchedState);
+        watchedState.uiState.clickedLink = a.href;
+      }
+      break;
+    default:
+      break;
+  }
+};
+
+export const closeModal = (watchedState) => {
+  watchedState.uiState.clickedLink = null;
 };

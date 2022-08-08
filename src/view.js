@@ -1,89 +1,189 @@
-export const dangerInput = (state) => {
-  state.elements.input.classList.add('is-invalid');
-  state.elements.feedback.textContent = state.uiState.feedbackStatus;
-  state.elements.feedback.classList.remove('text-success');
-  state.elements.feedback.classList.add('text-danger');
-  state.elements.inputForm.focus();
+const renderFeedsContainer = (state) => {
+  state.elements.feedsContainer.textContent = '';
+  const feedCard = document.createElement('div');
+  const feedCardBody = document.createElement('div');
+  const feedCardTitle = document.createElement('h2');
+  const feedsUl = document.createElement('ul');
+
+  feedCard.classList.add('card', 'border-0');
+  feedCardBody.classList.add('card-body');
+  feedCardTitle.classList.add('card-title', 'h4');
+  feedsUl.classList.add('list-group', 'border-0', 'rounded-0');
+  feedsUl.setAttribute('id', 'feedUl');
+  feedCardBody.append(feedCardTitle);
+  feedCardTitle.textContent = 'Фиды';
+  feedCard.append(feedCardBody, feedsUl);
+  state.elements.feedsContainer.append(feedCard);
 };
 
-export const successInput = (state) => {
-  state.elements.input.classList.remove('is-invalid');
-  state.elements.feedback.textContent = state.uiState.feedbackStatus;
-  state.elements.feedback.classList.remove('text-danger');
-  state.elements.feedback.classList.add('text-success');
-  state.elements.inputForm.reset();
-  state.elements.inputForm.focus();
+const renderFeedItem = (feed) => {
+  const feedLi = document.createElement('li');
+  const feedTitle = document.createElement('h3');
+  const feedDescription = document.createElement('p');
+  const feedsUl = document.querySelector('#feedUl');
+  feedLi.classList.add('list-group-item', 'border-0', 'border-end-0');
+  feedTitle.classList.add('h6', 'm-0');
+  feedDescription.classList.add('m-0', 'small', 'text-black-50');
+  feedTitle.textContent = feed.feedTitle;
+  feedDescription.textContent = feed.feedDescription;
+  feedLi.append(feedTitle);
+  feedLi.append(feedDescription);
+  feedsUl.prepend(feedLi);
 };
 
 const renderFeeds = (state) => {
-  state.elements.feedsContainer.textContent = '';
-  state.elements.feedCard = document.createElement('div');
-  state.elements.feedCard.classList.add('card', 'border-0');
-  state.elements.feedCardBody = document.createElement('div');
-  state.elements.feedCardBody.classList.add('card-body');
-  state.elements.feedCardTitle = document.createElement('h2');
-  state.elements.feedCardTitle.classList.add('card-title', 'h4');
-  state.elements.feedsUl = document.createElement('ul');
-  state.elements.feedsUl.classList.add('list-group', 'border-0', 'rounded-0');
-
-  state.elements.feedCardBody.append(state.elements.feedCardTitle);
-  state.elements.feedCardTitle.textContent = 'Фиды';
-
-  state.elements.feedCard.append(state.elements.feedCardBody, state.elements.feedsUl);
-  state.elements.feedsContainer.append(state.elements.feedCard);
+  renderFeedsContainer(state);
   state.feeds.forEach((feed) => {
-    state.elements.feedLi = document.createElement('li');
-    state.elements.feedTitle = document.createElement('h3');
-    state.elements.feedDescription = document.createElement('p');
-    state.elements.feedLi.classList.add('list-group-item', 'border-0', 'border-end-0');
-    state.elements.feedTitle.classList.add('h6', 'm-0');
-    state.elements.feedDescription.classList.add('m-0', 'small', 'text-black-50');
-    state.elements.feedTitle.textContent = feed.feedTitle;
-    state.elements.feedDescription.textContent = feed.feedDescription;
-    state.elements.feedsUl.append(state.elements.feedLi);
-    state.elements.feedLi.append(state.elements.feedTitle);
-    state.elements.feedLi.append(state.elements.feedDescription);
+    renderFeedItem(feed);
   });
 };
-const renderPosts = (state) => {
+const renderPostsContainer = (state) => {
   state.elements.postsContainer.textContent = '';
-  state.elements.postCard = document.createElement('div');
-  state.elements.postCardBody = document.createElement('div');
-  state.elements.postCardTitle = document.createElement('h2');
-  state.elements.postsUl = document.createElement('ul');
-  state.elements.postCard.classList.add('card', 'border-0');
-  state.elements.postCardBody.classList.add('card-body');
-  state.elements.postCardTitle.classList.add('card-title', 'h4');
-  state.elements.postsUl.classList.add('list-group', 'border-0', 'rounded-0');
-  state.elements.postCardTitle.textContent = 'Посты';
+  const postCard = document.createElement('div');
+  const postCardBody = document.createElement('div');
+  const postCardTitle = document.createElement('h2');
+  const postsUl = document.createElement('ul');
 
-  state.elements.postsContainer.append(state.elements.postCard);
-  state.elements.postCard.append(state.elements.postCardBody, state.elements.postsUl);
-  state.elements.postCardBody.append(state.elements.postCardTitle);
-  state.posts.flat().forEach((post) => {
-    state.elements.postLi = document.createElement('li');
-    state.elements.postHref = document.createElement('a');
-    state.elements.postButton = document.createElement('button');
-    state.elements.postHref.setAttribute('href', post.itemLink);
-    state.elements.postLi.classList.add(
-      'list-group-item',
-      'd-flex',
-      'justify-content-between',
-      'align-items-start',
-      'border-0',
-      'border-end-0',
-    );
-    state.elements.postHref.classList.add('fw-bold');
-    state.elements.postButton.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-    state.elements.postHref.textContent = post.itemTitle;
-    state.elements.postButton.textContent = 'Просмотр';
+  postCard.classList.add('card', 'border-0');
+  postCardBody.classList.add('card-body');
+  postCardTitle.classList.add('card-title', 'h4');
+  postsUl.classList.add('list-group', 'border-0', 'rounded-0');
+  postsUl.setAttribute('id', 'postsUl');
+  postCardTitle.textContent = 'Посты';
+  postCard.append(postCardBody, postsUl);
+  postCardBody.append(postCardTitle);
+  state.elements.postsContainer.append(postCard);
+};
 
-    state.elements.postLi.append(state.elements.postHref, state.elements.postButton);
-    state.elements.postsUl.append(state.elements.postLi);
-  });
+const renderPostItem = (post, type, state) => {
+  const postLi = document.createElement('li');
+  const postHref = document.createElement('a');
+  const postButton = document.createElement('button');
+  const postsUl = document.querySelector('#postsUl');
+  postHref.setAttribute('href', post.itemLink);
+  postLi.classList.add(
+    'list-group-item',
+    'd-flex',
+    'justify-content-between',
+    'align-items-start',
+    'border-0',
+    'border-end-0',
+  );
+  // console.log(state.viewedPostLinks);
+  if (state.viewedPostLinks.includes(post.itemLink)) {
+    postHref.classList.add('fw-normal');
+  } else {
+    postHref.classList.add('fw-bold');
+  }
+  postButton.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+  postHref.textContent = post.itemTitle;
+  postButton.textContent = 'Просмотр';
+
+  postLi.append(postHref, postButton);
+  if (type === 'new') {
+    postsUl.prepend(postLi);
+  } else {
+    postsUl.append(postLi);
+  }
+};
+
+const renderPosts = (state) => {
+  renderPostsContainer(state);
+  state.posts
+    .filter((a, b) => (a.pubDate < b.pubDate ? 1 : -1))
+    .flat()
+    .forEach((post) => {
+      renderPostItem(post, 'old', state);
+    });
 };
 
 export const renderContent = (state) => {
-  renderFeeds(state);
-  renderPosts(state);
+  const { feeds } = state.uiState;
+  if (feeds.status === 'loadingSourcePosts' || feeds.status === 'updatingViewedPosts') {
+    renderFeeds(state);
+    renderPosts(state);
+  }
+};
+
+export const renderNewPosts = (state) => {
+  state.uiState.newPostsToUpload.flat().forEach((post) => {
+    renderPostItem(post, 'new', state);
+  });
+};
+
+export const renderError = (state, i18) => {
+  const error = state.uiState.feeds.error[0].code;
+  let errorMessage = '';
+  switch (error) {
+    case 'ERR_NETWORK':
+      errorMessage = i18.t('ERR_NETWORK');
+      break;
+    default:
+      errorMessage = i18.t('otherErrors');
+      break;
+  }
+  state.elements.feedback.classList.add('text-danger');
+  state.elements.feedback.classList.remove('text-success');
+  state.elements.feedback.textContent = errorMessage;
+};
+
+export const renderFeedback = (state) => {
+  state.elements.feedback.textContent = state.uiState.inputForm.status;
+  switch (state.uiState.inputForm.valid) {
+    case true:
+      state.elements.feedback.classList.remove('text-danger');
+      state.elements.feedback.classList.add('text-success');
+      break;
+    case false:
+      state.elements.feedback.classList.add('text-danger');
+      state.elements.feedback.classList.remove('text-success');
+      break;
+    default:
+      break;
+  }
+};
+export const renderInputStatus = (state) => {
+  if (state.uiState.inputForm.valid) {
+    state.elements.input.classList.remove('is-invalid');
+    state.elements.inputForm.reset();
+  } else {
+    state.elements.input.classList.add('is-invalid');
+  }
+  state.elements.inputForm.focus();
+};
+
+const findPostByLink = (url, state) => {
+  const posts = state.posts[0].filter((post) => post.itemLink === url);
+  return posts[0];
+};
+
+export const renderModal = (state) => {
+  const body = document.querySelector('body');
+  const href = state.uiState.clickedLink;
+  const post = findPostByLink(href, state);
+  const modalTitle = document.querySelector('.modal-title');
+  const modalBody = document.querySelector('.modal-body');
+  const modal = document.querySelector('#modal');
+  const a = document.querySelector('.full-article');
+  a.href = href;
+
+  if (state.uiState.clickedLink) {
+    const backdrop = document.createElement('div');
+    backdrop.classList.add('modal-backdrop', 'show');
+    body.append(backdrop);
+    body.classList.add('modal-open');
+    modal.removeAttribute('aria-hidden');
+    modal.setAttribute('style', 'display: block');
+    modal.setAttribute('aria-modal', 'true');
+    modal.classList.add('show');
+    modalTitle.textContent = post.itemTitle;
+    modalBody.textContent = post.itemDescription;
+  } else {
+    const backdrop = document.querySelector('.modal-backdrop');
+    body.removeChild(backdrop);
+    modal.setAttribute('aria-hidden', 'true');
+    modal.setAttribute('style', 'display: none');
+    modal.setAttribute('aria-modal', 'false');
+    modal.classList.remove('show');
+  }
 };
