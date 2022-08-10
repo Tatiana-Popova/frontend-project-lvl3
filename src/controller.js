@@ -74,19 +74,18 @@ const parseResponse = (stream, watchedState) => {
     });
 };
 
-const checkUrlForXMLFormat = (url, watchedState) =>
-  downloadStream(url, watchedState)
-    .then((stream) => {
-      if (stream.startsWith('<?xml')) {
-        return;
-      }
-      const error = new Error();
-      error.message = 'invalidRSS';
-      throw error;
-    })
-    .catch((error) => {
-      throw new Error(error.message);
-    });
+const checkUrlForXMLFormat = (url, watchedState) => downloadStream(url, watchedState)
+  .then((stream) => {
+    if (stream.startsWith('<?xml')) {
+      return;
+    }
+    const error = new Error();
+    error.message = 'invalidRSS';
+    throw error;
+  })
+  .catch((error) => {
+    throw new Error(error.message);
+  });
 
 export const checkInputValid = async (i18, watchedState, url) => {
   yup.setLocale({

@@ -2,7 +2,11 @@ import onChange from 'on-change';
 import i18next from 'i18next';
 import resources from './locales/index';
 import { renderContent, renderFeedback, renderModal } from './view';
-import { uploadFeed, uploadNewPosts, handlePostClick, closeModal } from './controller';
+import {
+  uploadFeed,
+  uploadNewPosts,
+  handlePostClick, closeModal,
+} from './controller';
 
 const app = () => {
   const i18 = i18next.createInstance();
