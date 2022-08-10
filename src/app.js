@@ -5,7 +5,8 @@ import { renderContent, renderFeedback, renderModal } from './view';
 import {
   uploadFeed,
   uploadNewPosts,
-  handlePostClick, closeModal,
+  handlePostClick,
+  closeModal,
 } from './controller';
 
 const app = () => {
