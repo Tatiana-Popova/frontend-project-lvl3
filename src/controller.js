@@ -62,10 +62,24 @@ const parseResponse = (stream, watchedState) => {
       return ['old', feedInfo, parsedDomItems];
     })
     .catch((error) => {
-      error.message = 'invalidRSS';
+      error.message = 'Parsing error';
       throw new Error(error.message);
     });
 };
+
+const checkUrlForXMLFormat = (url, watchedState) =>
+  downloadStream(url, watchedState)
+    .then((stream) => {
+      if (stream.startsWith('<?xml')) {
+        return;
+      }
+      const error = new Error();
+      error.message = 'invalidRSS';
+      throw error;
+    })
+    .catch((error) => {
+      throw new Error(error.message);
+    });
 
 export const checkInputValid = async (i18, watchedState, url) => {
   yup.setLocale({
@@ -91,6 +105,7 @@ export const uploadFeed = (i18, watchedState, e) => {
   const formData = new FormData(e.target);
   const url = formData.get('url').trim();
   checkInputValid(i18, watchedState, url)
+    .then(() => checkUrlForXMLFormat(url, watchedState))
     .then(() => {
       watchedState.uiState.inputForm.valid = true;
       watchedState.uiState.inputForm.status = 'feedbackSucсess';
@@ -108,6 +123,7 @@ export const uploadFeed = (i18, watchedState, e) => {
     })
     .catch((error) => {
       watchedState.uiState.inputForm.valid = false;
+
       watchedState.uiState.inputForm.status = error.message;
     });
 };
