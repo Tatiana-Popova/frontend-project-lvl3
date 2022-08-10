@@ -41,7 +41,14 @@ const parseResponse = (stream, watchedState) => {
         itemCounter += 1;
         parsedDomItems = [
           ...parsedDomItems,
-          { itemCounter, itemTitle, feedLink, itemLink, itemDescription, pubDate },
+          {
+            itemCounter,
+            itemTitle,
+            feedLink,
+            itemLink,
+            itemDescription,
+            pubDate,
+          },
         ];
       });
 

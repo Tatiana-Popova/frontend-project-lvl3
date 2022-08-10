@@ -10,5 +10,5 @@ ignorePatterns:
   - dist
 rules:
   no-param-reassign: 0
-  object-curly-newline: 0
+  # object-curly-newline: 0
   implicit-arrow-linebreak: 0
