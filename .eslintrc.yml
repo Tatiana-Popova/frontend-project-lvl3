@@ -6,6 +6,8 @@ extends:
   - airbnb-base
 parserOptions:
   ecmaVersion: latest
+ignorePatterns:
+  - dist
 rules:
   no-param-reassign: 0
   object-curly-newline: 0
