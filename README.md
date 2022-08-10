@@ -8,4 +8,4 @@
 
 ### Demo:
 
-https://frontend-project-lvl3-iota-navy.vercel.app
+https://frontend-project-lvl3-lake-six.vercel.app
