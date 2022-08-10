@@ -2,40 +2,6 @@ import * as yup from 'yup';
 import axios from 'axios';
 import * as _ from 'lodash';
 
-export const checkInputValid = async (i18, watchedState, e) => {
-  yup.setLocale({
-    mixed: {
-      notOneOf: i18.t('feedbackExisting'),
-      default: 'heh',
-    },
-    string: {
-      url: i18.t('feedbackNotValid'),
-    },
-  });
-  const formData = new FormData(e.target);
-  const url = formData.get('url');
-
-  const schema = yup
-    .string()
-    .required()
-    .url()
-    .matches(['rss'])
-    .notOneOf([...watchedState.rssUrls]);
-  return schema
-    .validate(url)
-    .then((isvalid) => {
-      if (isvalid) {
-        watchedState.uiState.inputForm.valid = true;
-        watchedState.uiState.inputForm.status = i18.t('feedbackSucсess');
-      }
-    })
-    .catch((error) => {
-      watchedState.uiState.inputForm.valid = false;
-      watchedState.uiState.inputForm.status = error.errors;
-      throw new Error(error);
-    });
-};
-
 const createProxyToDownloadStreams = (rssUrl) => {
   const url = new URL('https://allorigins.hexlet.app/get');
   url.searchParams.set('disableCache', 'true');
@@ -43,19 +9,18 @@ const createProxyToDownloadStreams = (rssUrl) => {
   return url;
 };
 
-const downloadStream = (url, watchedState) => {
+const downloadStream = (url) => {
   const allOriginsUrl = createProxyToDownloadStreams(url);
   return axios
     .get(allOriginsUrl.href)
     .then((response) => response.data.contents)
     .catch((error) => {
-      watchedState.uiState.feeds.error = [...watchedState.uiState.feeds.error, error];
-      watchedState.uiState.feeds.error = error;
-      throw new Error(error);
+      error.message = 'networkError';
+      throw new Error(error.message);
     });
 };
 
-const parseResponse = (stream, feedCounter, watchedState) => {
+const parseResponse = (stream, watchedState) => {
   const parser = new DOMParser();
   return Promise.resolve(stream)
     .then((xmlString) => parser.parseFromString(xmlString, 'application/xml'))
@@ -65,7 +30,7 @@ const parseResponse = (stream, feedCounter, watchedState) => {
       const feedTitle = dom.querySelector('title').textContent;
       const feedDescription = dom.querySelector('description').textContent;
       const feedLink = dom.querySelector('link').textContent;
-      const feedInfo = { feedCounter, feedTitle, feedDescription, feedLink };
+      const feedInfo = { feedTitle, feedDescription, feedLink };
 
       let parsedDomItems = [];
       Array.from(domItems).forEach((item) => {
@@ -76,15 +41,16 @@ const parseResponse = (stream, feedCounter, watchedState) => {
         itemCounter += 1;
         parsedDomItems = [
           ...parsedDomItems,
-          { itemCounter, feedCounter, itemTitle, itemLink, itemDescription, pubDate },
+          { itemCounter, itemTitle, feedLink, itemLink, itemDescription, pubDate },
         ];
       });
-      if (watchedState.rssUrls.includes(feedLink)) {
-        const sameResourseCounter = _.last(
-          watchedState.feeds.filter((feed) => feed.feedLink === feedLink),
-        ).feedCounter;
+
+      const feedsWithSuchALink = watchedState.feeds.filter((feed) => feed.feedLink === feedLink);
+      const areThereFeedWithSuchALink = feedsWithSuchALink.length === 1;
+      if (areThereFeedWithSuchALink) {
         const sameResoursePosts = watchedState.posts
-          .filter((post) => post.feedCounter === sameResourseCounter)
+          .flat()
+          .filter((post) => post.feedLink === feedLink)
           .sort((a, b) => (a.pubDate > b.pubDate ? 1 : -1));
         const lastSameResorsePostDate = _.last(sameResoursePosts).pubDate;
         const sameResourseNewPosts = parsedDomItems.filter(
@@ -96,55 +62,98 @@ const parseResponse = (stream, feedCounter, watchedState) => {
       return ['old', feedInfo, parsedDomItems];
     })
     .catch((error) => {
-      watchedState.uiState.feeds.error = [...watchedState.uiState.feeds.error, error];
-      throw new Error(error);
+      error.type = 'Parsing error';
+      throw new Error(error.message);
     });
 };
 
-export const uploadFeed = (watchedState, e, feedCounter) => {
-  const formData = new FormData(e.target);
-  const url = formData.get('url');
+const checkUrlForXMLFormat = (url, watchedState) =>
   downloadStream(url, watchedState)
-    .then((stream) => parseResponse(stream, feedCounter, watchedState))
+    .then((stream) => {
+      if (stream.startsWith('<?xml')) {
+        return;
+      }
+      const error = new Error();
+      error.message = 'invalidRSS';
+      throw error;
+    })
+    .catch((error) => {
+      throw new Error(error.message);
+    });
+
+export const checkInputValid = async (i18, watchedState, url) => {
+  yup.setLocale({
+    mixed: {
+      notOneOf: 'feedbackExisting',
+    },
+    string: {
+      url: 'feedbackNotValid',
+    },
+  });
+  const schema = yup
+    .string()
+    .required()
+    .url()
+    .notOneOf([...watchedState.rssUrls]);
+  return schema.validate(url).catch((error) => {
+    error.type = 'Validate error';
+    throw new Error(error.errors);
+  });
+};
+
+export const uploadFeed = (i18, watchedState, e) => {
+  const formData = new FormData(e.target);
+  const url = formData.get('url').trim();
+  checkInputValid(i18, watchedState, url)
+    .then(() => checkUrlForXMLFormat(url, watchedState))
+    .then(() => {
+      watchedState.uiState.inputForm.valid = true;
+      watchedState.uiState.inputForm.status = 'feedbackSucсess';
+    })
+    .then(() => downloadStream(url, watchedState))
+    .then((stream) => parseResponse(stream, watchedState))
     .then((response) => {
       const feedInfo = response[1];
       const parsedItems = response[2];
       watchedState.feeds = [...watchedState.feeds, feedInfo];
       watchedState.posts = [...watchedState.posts, parsedItems];
       watchedState.uiState.feeds.status = 'loadingSourcePosts';
-      watchedState.uiState.feeds.status = 'sourcePostsAreLoaded';
+      watchedState.uiState.feeds.status = 'endOfOperation';
       watchedState.rssUrls.push(url);
     })
     .catch((error) => {
-      watchedState.uiState.feeds.error = [...watchedState.uiState.feeds.error, error];
-      throw new Error(error);
+      watchedState.uiState.inputForm.valid = false;
+
+      watchedState.uiState.inputForm.status = error.message;
     });
 };
 
-export const uploadNewPosts = (watchedState, feedCounter) => {
+export const uploadNewPosts = (watchedState) => {
   Promise.resolve()
     .then(() => {
       watchedState.rssUrls.forEach((rssUrl) => {
         downloadStream(rssUrl, watchedState)
-          .then((stream) => parseResponse(stream, feedCounter, watchedState))
+          .then((stream) => parseResponse(stream, watchedState))
           .then((newPosts) => {
             if (newPosts[0] === 'old') {
               return;
             }
-            console.log('newPosts', newPosts);
-            watchedState.uiState.newPostsToUpload = newPosts;
+            watchedState.uiState.newPostsToUpload = [
+              ...watchedState.uiState.newPostsToUpload,
+              newPosts[1].flat(),
+            ];
+            watchedState.uiState.feeds.status = 'loadingNewPosts';
+            watchedState.uiState.feeds.status = 'endOfOperation';
+            watchedState.posts = [...watchedState.posts, newPosts[1].flat()];
+            watchedState.uiState.newPostsToUpload = [];
           })
           .catch((error) => {
-            watchedState.uiState.feeds.error = [...watchedState.uiState.feeds.error, error];
+            watchedState.uiState.inputForm.status = error.message;
           });
       });
     })
-    .catch((error) => {
-      watchedState.uiState.inputForm.error = [...watchedState.uiState.feeds.error, error];
-      throw new Error(error);
-    })
     .finally(() => {
-      setTimeout(uploadNewPosts, 5000, watchedState, feedCounter);
+      setTimeout(uploadNewPosts, 5000, watchedState);
     });
 };
 

@@ -1,21 +1,8 @@
 import onChange from 'on-change';
 import i18next from 'i18next';
 import resources from './locales/index';
-import {
-  renderContent,
-  renderNewPosts,
-  renderInputStatus,
-  renderFeedback,
-  renderError,
-  renderModal,
-} from './view';
-import {
-  checkInputValid,
-  uploadFeed,
-  uploadNewPosts,
-  handlePostClick,
-  closeModal,
-} from './controller';
+import { renderContent, renderFeedback, renderModal } from './view';
+import { uploadFeed, uploadNewPosts, handlePostClick, closeModal } from './controller';
 
 const app = () => {
   const i18 = i18next.createInstance();
@@ -29,13 +16,11 @@ const app = () => {
       const state = {
         uiState: {
           inputForm: {
-            valid: null,
+            valid: false,
             status: null,
-            error: null,
           },
           feeds: {
             state: 'start',
-            error: [],
           },
           newPostsToUpload: [],
           isDownloadingNewPosts: false,
@@ -54,29 +39,19 @@ const app = () => {
         viewedPostLinks: [],
       };
 
-      let feedCounter = 0;
       const watchedState = onChange(state, (path) => {
         switch (path) {
           case 'uiState.inputForm.status':
-            renderFeedback(state);
+            renderFeedback(state, i18);
+            break;
+          case 'feeds':
+            renderFeedback(state, i18);
             if (state.uiState.isDownloadingNewPosts === false) {
-              uploadNewPosts(watchedState, feedCounter);
+              uploadNewPosts(watchedState);
               state.uiState.isDownloadingNewPosts = true;
             }
             break;
-          case 'feeds':
-            renderInputStatus(state);
-            break;
           case 'uiState.feeds.status':
-            renderContent(state);
-            break;
-          case 'uiState.newPostsToUpload':
-            renderNewPosts(state);
-            break;
-          case 'uiState.feeds.error':
-            renderError(state, i18);
-            state.uiState.inputForm.status = 'error';
-            break;
           case 'viewedPostLinks':
             renderContent(state);
             break;
@@ -90,12 +65,9 @@ const app = () => {
 
       state.elements.inputForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        checkInputValid(i18, watchedState, e).then(() => {
-          if (state.uiState.inputForm.valid) {
-            uploadFeed(watchedState, e, (feedCounter += 1));
-          }
-        });
+        uploadFeed(i18, watchedState, e);
       });
+
       state.elements.postsContainer.addEventListener('click', (e) => {
         const element = e.target;
         handlePostClick(element, watchedState);

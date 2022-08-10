@@ -69,7 +69,6 @@ const renderPostItem = (post, type, state) => {
     'border-0',
     'border-end-0',
   );
-  // console.log(state.viewedPostLinks);
   if (state.viewedPostLinks.includes(post.itemLink)) {
     postHref.classList.add('fw-normal');
   } else {
@@ -97,57 +96,42 @@ const renderPosts = (state) => {
     });
 };
 
+export const renderNewPosts = (state) => {
+  if (state.uiState.newPostsToUpload.flat().length === 0) {
+    return;
+  }
+  state.uiState.newPostsToUpload
+    .flat()
+    .reverse()
+    .forEach((item) => {
+      renderPostItem(item, 'new', state);
+    });
+};
+
 export const renderContent = (state) => {
   const { feeds } = state.uiState;
   if (feeds.status === 'loadingSourcePosts' || feeds.status === 'updatingViewedPosts') {
     renderFeeds(state);
     renderPosts(state);
+  } else if (feeds.status === 'loadingNewPosts') {
+    renderNewPosts(state);
   }
 };
 
-export const renderNewPosts = (state) => {
-  state.uiState.newPostsToUpload.flat().forEach((post) => {
-    renderPostItem(post, 'new', state);
-  });
-};
+export const renderFeedback = (state, i18) => {
+  const errorMessage = state.uiState.inputForm.status;
+  const feedbackText = i18.t(errorMessage);
+  state.elements.feedback.textContent = feedbackText;
 
-export const renderError = (state, i18) => {
-  const error = state.uiState.feeds.error[0].code;
-  let errorMessage = '';
-  switch (error) {
-    case 'ERR_NETWORK':
-      errorMessage = i18.t('ERR_NETWORK');
-      break;
-    default:
-      errorMessage = i18.t('otherErrors');
-      break;
-  }
-  state.elements.feedback.classList.add('text-danger');
-  state.elements.feedback.classList.remove('text-success');
-  state.elements.feedback.textContent = errorMessage;
-};
-
-export const renderFeedback = (state) => {
-  state.elements.feedback.textContent = state.uiState.inputForm.status;
-  switch (state.uiState.inputForm.valid) {
-    case true:
-      state.elements.feedback.classList.remove('text-danger');
-      state.elements.feedback.classList.add('text-success');
-      break;
-    case false:
-      state.elements.feedback.classList.add('text-danger');
-      state.elements.feedback.classList.remove('text-success');
-      break;
-    default:
-      break;
-  }
-};
-export const renderInputStatus = (state) => {
   if (state.uiState.inputForm.valid) {
     state.elements.input.classList.remove('is-invalid');
+    state.elements.feedback.classList.remove('text-danger');
+    state.elements.feedback.classList.add('text-success');
     state.elements.inputForm.reset();
   } else {
     state.elements.input.classList.add('is-invalid');
+    state.elements.feedback.classList.remove('text-success');
+    state.elements.feedback.classList.add('text-danger');
   }
   state.elements.inputForm.focus();
 };
