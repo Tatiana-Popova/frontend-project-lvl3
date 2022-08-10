@@ -27,11 +27,7 @@ jobs:
         # Run Linter
         run: |
           make lint
-          
-      - name: npx jest
-        # test project 
-        run: |
-         make jest
+        
          
       - name: Test & publish code coverage
         # Publish code coverage on Code Climate
