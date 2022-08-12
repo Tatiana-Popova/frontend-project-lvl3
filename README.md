@@ -12,7 +12,7 @@
 
 ### Demo:
 
-https://frontend-project-lvl3-lake-six.vercel.app
+https://frontend-project-lvl3-three-livid.vercel.app
 
 **Установка:**
 
