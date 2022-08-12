@@ -20,7 +20,7 @@ const downloadStream = (url) => {
     });
 };
 
-const parseResponse = (stream, watchedState) => {
+const parseResponse = (stream) => {
   const parser = new DOMParser();
   return Promise.resolve(stream)
     .then((xmlString) => parser.parseFromString(xmlString, 'application/xml'))
@@ -32,41 +32,22 @@ const parseResponse = (stream, watchedState) => {
       const feedLink = dom.querySelector('link').textContent;
       const feedInfo = { feedTitle, feedDescription, feedLink };
 
-      let parsedDomItems = [];
-      Array.from(domItems).forEach((item) => {
+      const parsedDomItems = Array.from(domItems).map((item) => {
         const itemTitle = item.querySelector('title').textContent;
         const itemLink = item.querySelector('link').textContent;
         const itemDescription = item.querySelector('description').textContent;
         const pubDate = item.querySelector('pubDate').textContent;
         itemCounter += 1;
-        parsedDomItems = [
-          ...parsedDomItems,
-          {
-            itemCounter,
-            itemTitle,
-            feedLink,
-            itemLink,
-            itemDescription,
-            pubDate,
-          },
-        ];
+        return {
+          itemCounter,
+          itemTitle,
+          feedLink,
+          itemLink,
+          itemDescription,
+          pubDate,
+        };
       });
-
-      const feedsWithSuchALink = watchedState.feeds.filter((feed) => feed.feedLink === feedLink);
-      const areThereFeedWithSuchALink = feedsWithSuchALink.length === 1;
-      if (areThereFeedWithSuchALink) {
-        const sameResoursePosts = watchedState.posts
-          .flat()
-          .filter((post) => post.feedLink === feedLink)
-          .sort((a, b) => (a.pubDate > b.pubDate ? 1 : -1));
-        const lastSameResorsePostDate = _.last(sameResoursePosts).pubDate;
-        const sameResourseNewPosts = parsedDomItems.filter(
-          (post) => post.pubDate > lastSameResorsePostDate,
-        );
-        return ['new', sameResourseNewPosts];
-      }
-
-      return ['old', feedInfo, parsedDomItems];
+      return [feedInfo, parsedDomItems];
     })
     .catch((error) => {
       error.message = 'Parsing error';
@@ -107,54 +88,39 @@ export const checkInputValid = async (i18, watchedState, url) => {
   });
 };
 
-export const uploadFeed = (i18, watchedState, e) => {
-  const formData = new FormData(e.target);
-  const url = formData.get('url').trim();
-  checkInputValid(i18, watchedState, url)
-    .then(() => checkUrlForXMLFormat(url, watchedState))
-    .then(() => {
-      watchedState.uiState.inputForm.valid = true;
-      watchedState.uiState.inputForm.status = 'feedbackSucсess';
-    })
-    .then(() => downloadStream(url, watchedState))
-    .then((stream) => parseResponse(stream, watchedState))
-    .then((response) => {
-      const feedInfo = response[1];
-      const parsedItems = response[2];
-      watchedState.feeds = [...watchedState.feeds, feedInfo];
-      watchedState.posts = [...watchedState.posts, parsedItems];
-      watchedState.uiState.feeds.status = 'loadingSourcePosts';
-      watchedState.uiState.feeds.status = 'endOfOperation';
-      watchedState.rssUrls.push(url);
-    })
-    .catch((error) => {
-      watchedState.uiState.inputForm.valid = false;
-
-      watchedState.uiState.inputForm.status = error.message;
-    });
-};
-
-export const uploadNewPosts = (watchedState) => {
+const uploadNewPosts = (watchedState) => {
   Promise.resolve()
     .then(() => {
       watchedState.rssUrls.forEach((rssUrl) => {
         downloadStream(rssUrl, watchedState)
           .then((stream) => parseResponse(stream, watchedState))
-          .then((newPosts) => {
-            if (newPosts[0] === 'old') {
-              return;
-            }
+          .then((response) => {
+            const feedInfo = response[0];
+            const parsedItems = response[1];
+
+            const feedsWithSuchALink = watchedState.feeds
+              .filter((feed) => feed.feedLink === feedInfo.feedLink);
+            const areThereFeedWithSuchALink = feedsWithSuchALink.length === 1;
+            if (!areThereFeedWithSuchALink) return;
+            const sameResoursePosts = watchedState.posts
+              .flat()
+              .filter((post) => post.feedLink === feedInfo.feedLink)
+              .sort((a, b) => (a.pubDate > b.pubDate ? 1 : -1));
+            const lastSameResorsePostDate = _.last(sameResoursePosts).pubDate;
+            const sameResourseNewPosts = parsedItems.filter(
+              (post) => post.pubDate > lastSameResorsePostDate,
+            );
             watchedState.uiState.newPostsToUpload = [
               ...watchedState.uiState.newPostsToUpload,
-              newPosts[1].flat(),
+              sameResourseNewPosts.flat(),
             ];
-            watchedState.uiState.feeds.status = 'loadingNewPosts';
-            watchedState.uiState.feeds.status = 'endOfOperation';
-            watchedState.posts = [...watchedState.posts, newPosts[1].flat()];
+            watchedState.posts = [...watchedState.posts, sameResourseNewPosts.flat()];
+            watchedState.uiState.inputForm.status = 'loadingNewPosts';
+            watchedState.uiState.inputForm.status = 'successLoadingNewPosts';
             watchedState.uiState.newPostsToUpload = [];
           })
-          .catch((error) => {
-            watchedState.uiState.inputForm.status = error.message;
+          .catch(() => {
+            watchedState.uiState.inputForm.status = 'failedDownload';
           });
       });
     })
@@ -163,10 +129,38 @@ export const uploadNewPosts = (watchedState) => {
     });
 };
 
+export const uploadFeed = (i18, watchedState, e) => {
+  const formData = new FormData(e.target);
+  const url = formData.get('url').trim();
+  checkInputValid(i18, watchedState, url)
+    .then(() => checkUrlForXMLFormat(url, watchedState))
+    .then(() => {
+      watchedState.uiState.inputForm.valid = true;
+      watchedState.uiState.inputForm.feedback = 'feedbackSucсess';
+      watchedState.uiState.inputForm.status = 'loadingPosts';
+    })
+    .then(() => downloadStream(url, watchedState))
+    .then((stream) => parseResponse(stream, watchedState))
+    .then((response) => {
+      const feedInfo = response[0];
+      const parsedItems = response[1];
+      watchedState.feeds = [...watchedState.feeds, feedInfo];
+      watchedState.posts = [...watchedState.posts, parsedItems];
+      watchedState.uiState.inputForm.status = 'successDownload';
+      watchedState.rssUrls.push(url);
+      uploadNewPosts(watchedState);
+    })
+    .catch((error) => {
+      watchedState.uiState.inputForm.valid = false;
+      watchedState.uiState.inputForm.feedback = error.message;
+      watchedState.uiState.inputForm.status = 'failedDownload';
+    });
+};
+
 const markAsRead = (element, watchedState) => {
   const { href } = element;
   watchedState.viewedPostLinks = [...watchedState.viewedPostLinks, href];
-  watchedState.uiState.feeds.status = 'updatingViewedPosts';
+  watchedState.uiState.inputForm.status = 'markPostsAsRead';
 };
 
 export const handlePostClick = (element, watchedState) => {
@@ -186,6 +180,6 @@ export const handlePostClick = (element, watchedState) => {
   }
 };
 
-export const closeModal = (watchedState) => {
-  watchedState.uiState.clickedLink = null;
-};
+// export const closeModal = (watchedState) => {
+//   watchedState.uiState.clickedLink = null;
+// };

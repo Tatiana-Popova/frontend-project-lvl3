@@ -75,6 +75,10 @@ const renderPostItem = (post, type, state) => {
     postHref.classList.add('fw-bold');
   }
   postButton.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+  postButton.setAttribute('data-bs-dismiss', 'modal');
+  postButton.setAttribute('data-bs-toggle', 'modal');
+  postButton.setAttribute('data-bs-target', '#modal');
+
   postHref.textContent = post.itemTitle;
   postButton.textContent = 'Просмотр';
 
@@ -109,17 +113,23 @@ export const renderNewPosts = (state) => {
 };
 
 export const renderContent = (state) => {
-  const { feeds } = state.uiState;
-  if (feeds.status === 'loadingSourcePosts' || feeds.status === 'updatingViewedPosts') {
-    renderFeeds(state);
-    renderPosts(state);
-  } else if (feeds.status === 'loadingNewPosts') {
-    renderNewPosts(state);
+  const { status } = state.uiState.inputForm;
+  switch (status) {
+    case 'successDownload':
+    case 'markPostsAsRead':
+      renderFeeds(state);
+      renderPosts(state);
+      break;
+    case 'successLoadingNewPosts':
+      renderNewPosts(state);
+      break;
+    default:
+      break;
   }
 };
 
 export const renderFeedback = (state, i18) => {
-  const errorMessage = state.uiState.inputForm.status;
+  const errorMessage = state.uiState.inputForm.feedback;
   const feedbackText = i18.t(errorMessage);
   state.elements.feedback.textContent = feedbackText;
 
@@ -142,32 +152,12 @@ const findPostByLink = (url, state) => {
 };
 
 export const renderModal = (state) => {
-  const body = document.querySelector('body');
   const href = state.uiState.clickedLink;
   const post = findPostByLink(href, state);
   const modalTitle = document.querySelector('.modal-title');
   const modalBody = document.querySelector('.modal-body');
-  const modal = document.querySelector('#modal');
   const a = document.querySelector('.full-article');
   a.href = href;
-
-  if (state.uiState.clickedLink) {
-    const backdrop = document.createElement('div');
-    backdrop.classList.add('modal-backdrop', 'show');
-    body.append(backdrop);
-    body.classList.add('modal-open');
-    modal.removeAttribute('aria-hidden');
-    modal.setAttribute('style', 'display: block');
-    modal.setAttribute('aria-modal', 'true');
-    modal.classList.add('show');
-    modalTitle.textContent = post.itemTitle;
-    modalBody.textContent = post.itemDescription;
-  } else {
-    const backdrop = document.querySelector('.modal-backdrop');
-    body.removeChild(backdrop);
-    modal.setAttribute('aria-hidden', 'true');
-    modal.setAttribute('style', 'display: none');
-    modal.setAttribute('aria-modal', 'false');
-    modal.classList.remove('show');
-  }
+  modalTitle.textContent = post.itemTitle;
+  modalBody.textContent = post.itemDescription;
 };

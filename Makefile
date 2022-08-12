@@ -2,14 +2,11 @@
 install:
 	npm ci
 
-publish: 
-	npm publish --dry-run
-
 lint:
 	npx eslint .
 
-jest:
-	npx jest 
+publish:
+	npm publish
 
-test-coverage:
-	npx jest --coverage
+production:
+	npm run prod

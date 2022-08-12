@@ -1,12 +1,11 @@
 import onChange from 'on-change';
 import i18next from 'i18next';
 import resources from './locales/index';
+import 'bootstrap';
 import { renderContent, renderFeedback, renderModal } from './view';
 import {
   uploadFeed,
-  uploadNewPosts,
   handlePostClick,
-  closeModal,
 } from './controller';
 
 const app = () => {
@@ -22,13 +21,10 @@ const app = () => {
         uiState: {
           inputForm: {
             valid: false,
-            status: null,
-          },
-          feeds: {
-            state: 'start',
+            status: 'initial',
+            feedback: 'initial',
           },
           newPostsToUpload: [],
-          isDownloadingNewPosts: false,
           clickedLink: null,
         },
         elements: {
@@ -47,17 +43,8 @@ const app = () => {
       const watchedState = onChange(state, (path) => {
         switch (path) {
           case 'uiState.inputForm.status':
-            renderFeedback(state, i18);
-            break;
-          case 'feeds':
-            renderFeedback(state, i18);
-            if (state.uiState.isDownloadingNewPosts === false) {
-              uploadNewPosts(watchedState);
-              state.uiState.isDownloadingNewPosts = true;
-            }
-            break;
-          case 'uiState.feeds.status':
           case 'viewedPostLinks':
+            renderFeedback(state, i18);
             renderContent(state);
             break;
           case 'uiState.clickedLink':
@@ -76,19 +63,6 @@ const app = () => {
       state.elements.postsContainer.addEventListener('click', (e) => {
         const element = e.target;
         handlePostClick(element, watchedState);
-      });
-
-      const modal = document.querySelector('#modal');
-
-      modal.addEventListener('click', (e) => {
-        const element = e.target;
-        if (element.hasAttribute('to-close-modal') || element.parentNode.tagName === 'BODY') {
-          closeModal(watchedState);
-        }
-      });
-
-      document.addEventListener('keydown', (e) => {
-        if (state.clickedLink !== null && e.key === 'Escape') closeModal(watchedState);
       });
     });
 };

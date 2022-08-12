@@ -5,8 +5,25 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/22fd4c80848f6b5911d7/maintainability)](https://codeclimate.com/github/Tatiana-Popova/frontend-project-lvl3/maintainability)
 
 ---
+
 ### RSS агрегатор
+
+\- сервис для агрегации RSS-потоков. Он позволяет добавлять неограниченное количество RSS-лент, сам их обновляет и добавляет новые записи в общий поток.
 
 ### Demo:
 
 https://frontend-project-lvl3-lake-six.vercel.app
+
+**Установка:**
+
+```sh
+$ git clone https://github.com/Tatiana-Popova/frontend-project-lvl3
+$ make install
+$ sudo npm link
+```
+
+**Начать работу:**
+
+```sh
+$ make production
+```
