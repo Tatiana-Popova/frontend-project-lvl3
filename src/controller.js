@@ -158,7 +158,6 @@ export const loadFeed = (i18, watchedState, e) => {
 const markAsRead = (element, watchedState) => {
   const { href } = element;
   watchedState.viewedPostLinks.add(href);
-  watchedState.uiState.inputForm.status = 'markAsRead';
 };
 
 export const handlePostClick = (element, watchedState) => {
