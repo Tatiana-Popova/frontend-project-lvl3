@@ -5,5 +5,7 @@ export default {
     feedbackExisting: 'RSS уже существует',
     networkError: 'Ошибка сети',
     invalidRSS: 'Ресурс не содержит валидный RSS',
+    feeds: 'Фиды',
+    view: 'Просмотр',
   },
 };

@@ -5,5 +5,7 @@ export default {
     feedbackExisting: 'RSS already exists',
     networkError: 'Network error',
     invalidRSS: 'Resource does not contain valid RSS',
+    feeds: 'Feeds',
+    view: 'View',
   },
 };

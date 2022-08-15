@@ -1,5 +1,6 @@
-const renderFeedsContainer = (state) => {
-  state.elements.feedsContainer.textContent = '';
+const renderFeedsContainer = () => {
+  const feedsContainer = document.querySelector('.feeds');
+  feedsContainer.textContent = '';
   const feedCard = document.createElement('div');
   const feedCardBody = document.createElement('div');
   const feedCardTitle = document.createElement('h2');
@@ -13,7 +14,7 @@ const renderFeedsContainer = (state) => {
   feedCardBody.append(feedCardTitle);
   feedCardTitle.textContent = 'Фиды';
   feedCard.append(feedCardBody, feedsUl);
-  state.elements.feedsContainer.append(feedCard);
+  feedsContainer.append(feedCard);
 };
 
 const renderFeedItem = (feed) => {
@@ -37,8 +38,9 @@ const renderFeeds = (state) => {
     renderFeedItem(feed);
   });
 };
-const renderPostsContainer = (state) => {
-  state.elements.postsContainer.textContent = '';
+const renderPostsContainer = () => {
+  const postsContainer = document.querySelector('.posts');
+  postsContainer.textContent = '';
   const postCard = document.createElement('div');
   const postCardBody = document.createElement('div');
   const postCardTitle = document.createElement('h2');
@@ -52,10 +54,10 @@ const renderPostsContainer = (state) => {
   postCardTitle.textContent = 'Посты';
   postCard.append(postCardBody, postsUl);
   postCardBody.append(postCardTitle);
-  state.elements.postsContainer.append(postCard);
+  postsContainer.append(postCard);
 };
 
-const renderPostItem = (post, type, state) => {
+const renderPostItem = (post, type, state, i18) => {
   const postLi = document.createElement('li');
   const postHref = document.createElement('a');
   const postButton = document.createElement('button');
@@ -69,7 +71,7 @@ const renderPostItem = (post, type, state) => {
     'border-0',
     'border-end-0',
   );
-  if (state.viewedPostLinks.includes(post.itemLink)) {
+  if (state.viewedPostLinks.has(post.itemLink)) {
     postHref.classList.add('fw-normal');
   } else {
     postHref.classList.add('fw-bold');
@@ -80,7 +82,7 @@ const renderPostItem = (post, type, state) => {
   postButton.setAttribute('data-bs-target', '#modal');
 
   postHref.textContent = post.itemTitle;
-  postButton.textContent = 'Просмотр';
+  postButton.textContent = i18.t('view');
 
   postLi.append(postHref, postButton);
   if (type === 'new') {
@@ -90,17 +92,21 @@ const renderPostItem = (post, type, state) => {
   }
 };
 
-const renderPosts = (state) => {
+const renderPosts = (state, i18) => {
   renderPostsContainer(state);
   state.posts
-    .filter((a, b) => (a.pubDate < b.pubDate ? 1 : -1))
     .flat()
+    .sort((a, b) => {
+      const aDate = new Date(a.pubDate);
+      const bDate = new Date(b.pubDate);
+      return (aDate < bDate ? 1 : -1);
+    })
     .forEach((post) => {
-      renderPostItem(post, 'old', state);
+      renderPostItem(post, 'old', state, i18);
     });
 };
 
-export const renderNewPosts = (state) => {
+export const renderNewPosts = (state, i18) => {
   if (state.uiState.newPostsToUpload.flat().length === 0) {
     return;
   }
@@ -108,46 +114,41 @@ export const renderNewPosts = (state) => {
     .flat()
     .reverse()
     .forEach((item) => {
-      renderPostItem(item, 'new', state);
+      renderPostItem(item, 'new', state, i18);
     });
 };
 
-export const renderContent = (state) => {
+export const renderContent = (state, i18) => {
   const { status } = state.uiState.inputForm;
-  switch (status) {
-    case 'successDownload':
-    case 'markPostsAsRead':
-      renderFeeds(state);
-      renderPosts(state);
-      break;
-    case 'successLoadingNewPosts':
-      renderNewPosts(state);
-      break;
-    default:
-      break;
+  if (status === 'successDownload' || status === 'markAsRead') {
+    renderFeeds(state);
+    renderPosts(state, i18);
   }
 };
 
 export const renderFeedback = (state, i18) => {
+  const feedback = document.querySelector('.feedback');
   const errorMessage = state.uiState.inputForm.feedback;
   const feedbackText = i18.t(errorMessage);
-  state.elements.feedback.textContent = feedbackText;
+  feedback.textContent = feedbackText;
+  const input = document.querySelector('#url-input');
+  const inputForm = document.querySelector('.rss-form');
 
   if (state.uiState.inputForm.valid) {
-    state.elements.input.classList.remove('is-invalid');
-    state.elements.feedback.classList.remove('text-danger');
-    state.elements.feedback.classList.add('text-success');
-    state.elements.inputForm.reset();
+    input.classList.remove('is-invalid');
+    feedback.classList.remove('text-danger');
+    feedback.classList.add('text-success');
+    inputForm.reset();
   } else {
-    state.elements.input.classList.add('is-invalid');
-    state.elements.feedback.classList.remove('text-success');
-    state.elements.feedback.classList.add('text-danger');
+    input.classList.add('is-invalid');
+    feedback.classList.remove('text-success');
+    feedback.classList.add('text-danger');
   }
-  state.elements.inputForm.focus();
+  inputForm.focus();
 };
 
 const findPostByLink = (url, state) => {
-  const posts = state.posts[0].filter((post) => post.itemLink === url);
+  const posts = state.posts.flat().filter((post) => post.itemLink === url);
   return posts[0];
 };
 
