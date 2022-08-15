@@ -2,7 +2,12 @@ import onChange from 'on-change';
 import i18next from 'i18next';
 import resources from './locales/index';
 import 'bootstrap';
-import { renderContent, renderFeedback, renderModal, renderNewPosts } from './view';
+import {
+  renderContent,
+  renderFeedback,
+  renderModal,
+  renderNewPosts,
+} from './view';
 import {
   loadFeed,
   handlePostClick,
