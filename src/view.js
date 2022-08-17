@@ -1,5 +1,5 @@
-const renderFeedsContainer = () => {
-  const feedsContainer = document.querySelector('.feeds');
+const renderFeedsContainer = (elements) => {
+  const { feedsContainer } = elements;
   feedsContainer.textContent = '';
   const feedCard = document.createElement('div');
   const feedCardBody = document.createElement('div');
@@ -32,14 +32,14 @@ const renderFeedItem = (feed) => {
   feedsUl.prepend(feedLi);
 };
 
-const renderFeeds = (state) => {
-  renderFeedsContainer(state);
+const renderFeeds = (state, elements) => {
+  renderFeedsContainer(elements);
   state.feeds.forEach((feed) => {
     renderFeedItem(feed);
   });
 };
-const renderPostsContainer = () => {
-  const postsContainer = document.querySelector('.posts');
+const renderPostsContainer = (elements) => {
+  const { postsContainer } = elements;
   postsContainer.textContent = '';
   const postCard = document.createElement('div');
   const postCardBody = document.createElement('div');
@@ -92,8 +92,8 @@ const renderPostItem = (post, type, state, i18) => {
   }
 };
 
-const renderPosts = (state, i18) => {
-  renderPostsContainer(state);
+const renderPosts = (state, i18, elements) => {
+  renderPostsContainer(elements);
   state.posts
     .flat()
     .sort((a, b) => {
@@ -118,21 +118,21 @@ export const renderNewPosts = (state, i18) => {
     });
 };
 
-export const renderContent = (state, i18) => {
+export const renderContent = (state, i18, elements) => {
   const { status } = state.uiState.inputForm;
   if (status === 'successDownload' || status === 'markAsRead') {
-    renderFeeds(state);
-    renderPosts(state, i18);
+    renderFeeds(state, elements);
+    renderPosts(state, i18, elements);
   }
 };
 
-export const renderFeedback = (state, i18) => {
-  const feedback = document.querySelector('.feedback');
+export const renderFeedback = (state, i18, elements) => {
+  const { feedback } = elements;
   const errorMessage = state.uiState.inputForm.feedback;
   const feedbackText = i18.t(errorMessage);
   feedback.textContent = feedbackText;
-  const input = document.querySelector('#url-input');
-  const inputForm = document.querySelector('.rss-form');
+  const { input } = elements;
+  const { inputForm } = elements;
 
   if (state.uiState.inputForm.valid) {
     input.classList.remove('is-invalid');
@@ -161,4 +161,14 @@ export const renderModal = (state) => {
   a.href = href;
   modalTitle.textContent = post.itemTitle;
   modalBody.textContent = post.itemDescription;
+};
+
+export const changeTheAbilityToChangeTheShape = (state, elements) => {
+  if (state.uiState.isDownloadingFeeds) {
+    elements.input.disabled = true;
+    elements.addButton.disabled = true;
+  } else {
+    elements.input.disabled = false;
+    elements.addButton.disabled = false;
+  }
 };

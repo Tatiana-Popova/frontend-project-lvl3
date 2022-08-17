@@ -7,6 +7,7 @@ import {
   renderFeedback,
   renderModal,
   renderNewPosts,
+  changeTheAbilityToChangeTheShape,
 } from './view';
 import {
   loadFeed,
@@ -14,6 +15,15 @@ import {
 } from './controller';
 
 const app = () => {
+  const elements = {
+    input: document.querySelector('#url-input'),
+    inputForm: document.querySelector('.rss-form'),
+    feedback: document.querySelector('.feedback'),
+    feedsContainer: document.querySelector('.feeds'),
+    postsContainer: document.querySelector('.posts'),
+    addButton: document.querySelector('#add-button'),
+  };
+
   const i18 = i18next.createInstance();
   i18
     .init({
@@ -30,6 +40,7 @@ const app = () => {
             feedback: 'initial',
           },
           isDownloadingNewPosts: false,
+          isDownloadingFeeds: false,
           newPostsToUpload: [],
           clickedLink: null,
         },
@@ -46,11 +57,15 @@ const app = () => {
             break;
           case 'uiState.inputForm.status':
           case 'viewedPostLinks':
-            renderFeedback(state, i18);
-            renderContent(state, i18);
+            renderFeedback(state, i18, elements);
+            renderContent(state, i18, elements);
             break;
           case 'uiState.clickedLink':
             renderModal(state);
+            break;
+          case 'uiState.isDownloadingFeeds':
+            changeTheAbilityToChangeTheShape(state, elements);
+            console.log(elements.inputForm.disabled);
             break;
           default:
             break;
