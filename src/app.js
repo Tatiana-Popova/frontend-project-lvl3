@@ -6,8 +6,6 @@ import {
   renderContent,
   renderFeedback,
   renderModal,
-  renderNewPosts,
-  changeTheAbilityToChangeTheShape,
 } from './view';
 import {
   loadFeed,
@@ -36,36 +34,26 @@ const app = () => {
         uiState: {
           inputForm: {
             valid: false,
-            status: 'initial',
             feedback: 'initial',
           },
-          isDownloadingNewPosts: false,
-          isDownloadingFeeds: false,
-          newPostsToUpload: [],
+          status: 'initial',
+          viewedPostLinks: new Set(),
           clickedLink: null,
         },
         rssUrls: [],
         feeds: [],
         posts: [],
-        viewedPostLinks: new Set(),
       };
 
       const watchedState = onChange(state, (path) => {
         switch (path) {
-          case 'uiState.isDownloadingNewPosts':
-            renderNewPosts(state, i18);
-            break;
-          case 'uiState.inputForm.status':
-          case 'viewedPostLinks':
+          case 'uiState.status':
+          case 'uiState.viewedPostLinks':
             renderFeedback(state, i18, elements);
             renderContent(state, i18, elements);
             break;
           case 'uiState.clickedLink':
             renderModal(state);
-            break;
-          case 'uiState.isDownloadingFeeds':
-            changeTheAbilityToChangeTheShape(state, elements);
-            console.log(elements.inputForm.disabled);
             break;
           default:
             break;

@@ -71,7 +71,7 @@ const renderPostItem = (post, type, state, i18) => {
     'border-0',
     'border-end-0',
   );
-  if (state.viewedPostLinks.has(post.itemLink)) {
+  if (state.uiState.viewedPostLinks.has(post.itemLink)) {
     postHref.classList.add('fw-normal');
   } else {
     postHref.classList.add('fw-bold');
@@ -106,27 +106,19 @@ const renderPosts = (state, i18, elements) => {
     });
 };
 
-export const renderNewPosts = (state, i18) => {
-  if (state.uiState.newPostsToUpload.flat().length === 0) {
-    return;
-  }
-  state.uiState.newPostsToUpload
-    .flat()
-    .reverse()
-    .forEach((item) => {
-      renderPostItem(item, 'new', state, i18);
-    });
-};
-
-export const renderContent = (state, i18, elements) => {
-  const { status } = state.uiState.inputForm;
-  if (status === 'successDownload' || status === 'markAsRead') {
+const renderContent = (state, i18, elements) => {
+  const { status } = state.uiState;
+  if (status === 'successDownload' || status === 'markAsRead' || status === 'successDownloadNewPosts') {
+    elements.input.disabled = true;
+    elements.addButton.disabled = true;
     renderFeeds(state, elements);
     renderPosts(state, i18, elements);
+    elements.input.disabled = false;
+    elements.addButton.disabled = false;
   }
 };
 
-export const renderFeedback = (state, i18, elements) => {
+const renderFeedback = (state, i18, elements) => {
   const { feedback } = elements;
   const errorMessage = state.uiState.inputForm.feedback;
   const feedbackText = i18.t(errorMessage);
@@ -152,7 +144,7 @@ const findPostByLink = (url, state) => {
   return posts[0];
 };
 
-export const renderModal = (state) => {
+const renderModal = (state) => {
   const href = state.uiState.clickedLink;
   const post = findPostByLink(href, state);
   const modalTitle = document.querySelector('.modal-title');
@@ -163,12 +155,8 @@ export const renderModal = (state) => {
   modalBody.textContent = post.itemDescription;
 };
 
-export const changeTheAbilityToChangeTheShape = (state, elements) => {
-  if (state.uiState.isDownloadingFeeds) {
-    elements.input.disabled = true;
-    elements.addButton.disabled = true;
-  } else {
-    elements.input.disabled = false;
-    elements.addButton.disabled = false;
-  }
+export {
+  renderContent,
+  renderFeedback,
+  renderModal,
 };
