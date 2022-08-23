@@ -24,8 +24,8 @@ const downloadStream = (url) => {
     .get(allOriginsUrl.href)
     .then((response) => response.data.contents)
     .catch((error) => {
-      error.message = 'networkError';
-      throw new Error(error.message);
+      error.type = 'networkError';
+      throw error;
     });
 };
 
@@ -34,8 +34,8 @@ const parseResponse = (stream) => {
   const dom = parser.parseFromString(stream, 'application/xml');
   const errorNode = dom.querySelector('parsererror');
   if (errorNode) {
-    const error = new Error();
-    error.message = 'invalidRSS';
+    const error = new Error(errorNode);
+    error.type = 'parseError';
     throw error;
   } else {
     const domItems = dom.querySelectorAll('item');
@@ -68,8 +68,8 @@ export const checkInputValid = async (i18, watchedState, url) => {
     .url()
     .notOneOf([...watchedState.rssUrls]);
   return schema.validate(url).catch((error) => {
-    error.type = 'Validate error';
-    throw new Error(error.errors);
+    error.type = 'validateError';
+    throw error;
   });
 };
 
@@ -108,8 +108,6 @@ export const loadFeed = (i18, watchedState, e) => {
   checkInputValid(i18, watchedState, url)
     .then(() => {
       watchedState.uiState.inputForm.valid = true;
-      watchedState.uiState.inputForm.feedback = 'feedbackSucсess';
-      watchedState.uiState.status = 'loadingPosts';
       return downloadStream(url, watchedState);
     })
     .then((stream) => {
@@ -121,14 +119,28 @@ export const loadFeed = (i18, watchedState, e) => {
         const hasPostsThatPostAlready = checkPostForUniq(watchedState.posts.flat(), item);
         if (!hasPostsThatPostAlready) watchedState.posts = [...watchedState.posts, item];
       });
+      watchedState.uiState.inputForm.feedback = 'feedbackSucсess';
       watchedState.uiState.status = 'successDownload';
       watchedState.rssUrls.push(url);
       uploadNewPosts(watchedState);
     })
     .catch((error) => {
       watchedState.uiState.inputForm.valid = false;
-      watchedState.uiState.inputForm.feedback = error.message;
-      watchedState.uiState.status = error.message;
+      switch (error.type) {
+        case ('networkError'):
+          watchedState.uiState.inputForm.feedback = 'networkError';
+          break;
+        case ('parseError'):
+          watchedState.uiState.inputForm.feedback = 'invalidRSS';
+          break;
+        case ('validateError'):
+          watchedState.uiState.inputForm.feedback = error.message;
+          break;
+        default:
+          break;
+      }
+      watchedState.uiState.status = error.type;
+      console.log(error.message);
     });
 };
 

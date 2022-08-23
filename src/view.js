@@ -120,8 +120,8 @@ const renderContent = (state, i18, elements) => {
 
 const renderFeedback = (state, i18, elements) => {
   const { feedback } = elements;
-  const errorMessage = state.uiState.inputForm.feedback;
-  const feedbackText = i18.t(errorMessage);
+  const message = state.uiState.inputForm.feedback;
+  const feedbackText = i18.t(message);
   feedback.textContent = feedbackText;
   const { input } = elements;
   const { inputForm } = elements;
