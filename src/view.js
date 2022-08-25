@@ -106,19 +106,26 @@ const renderPosts = (state, i18, elements) => {
     });
 };
 
+const changeFormaAcessibility = (disable, elements) => {
+  if (!disable) {
+    elements.input.disabled = false;
+    elements.addButton.disabled = false;
+  } else {
+    elements.input.disabled = true;
+    elements.addButton.disabled = true;
+  }
+}
+
 const renderContent = (state, i18, elements) => {
   const { status } = state.uiState;
   if (status === 'successDownload' || status === 'markAsRead' || status === 'successDownloadNewPosts') {
-    elements.input.disabled = true;
-    elements.addButton.disabled = true;
     renderFeeds(state, elements);
     renderPosts(state, i18, elements);
-    elements.input.disabled = false;
-    elements.addButton.disabled = false;
   }
 };
 
 const renderFeedback = (state, i18, elements) => {
+  if (state.uiState.status === 'successDownloadNewPosts' || state.uiState.status === 'loadingNewPosts') return;
   const { feedback } = elements;
   const message = state.uiState.inputForm.feedback;
   const feedbackText = i18.t(message);
@@ -159,4 +166,5 @@ export {
   renderContent,
   renderFeedback,
   renderModal,
+  changeFormaAcessibility,
 };

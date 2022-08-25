@@ -6,6 +6,7 @@ import {
   renderContent,
   renderFeedback,
   renderModal,
+  changeFormaAcessibility,
 } from './view';
 import {
   loadFeed,
@@ -35,6 +36,7 @@ const app = () => {
           inputForm: {
             valid: false,
             feedback: 'initial',
+            disable: false,
           },
           status: 'initial',
           viewedPostLinks: new Set(),
@@ -54,6 +56,9 @@ const app = () => {
             break;
           case 'uiState.clickedLink':
             renderModal(state);
+            break;
+          case 'uiState.inputForm.disable':
+            changeFormaAcessibility(state.uiState.inputForm.disable, elements);
             break;
           default:
             break;

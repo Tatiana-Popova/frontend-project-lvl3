@@ -108,6 +108,7 @@ export const loadFeed = (i18, watchedState, e) => {
   checkInputValid(i18, watchedState, url)
     .then(() => {
       watchedState.uiState.inputForm.valid = true;
+      watchedState.uiState.inputForm.disable = true;
       return downloadStream(url, watchedState);
     })
     .then((stream) => {
@@ -121,10 +122,12 @@ export const loadFeed = (i18, watchedState, e) => {
       });
       watchedState.uiState.inputForm.feedback = 'feedbackSucсess';
       watchedState.uiState.status = 'successDownload';
+      watchedState.uiState.inputForm.disable = false;
       watchedState.rssUrls.push(url);
       uploadNewPosts(watchedState);
     })
     .catch((error) => {
+      watchedState.uiState.inputForm.disable = false;
       watchedState.uiState.inputForm.valid = false;
       switch (error.type) {
         case ('networkError'):
