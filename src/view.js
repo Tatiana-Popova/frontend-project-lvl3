@@ -114,7 +114,7 @@ const changeFormaAcessibility = (disable, elements) => {
     elements.input.disabled = true;
     elements.addButton.disabled = true;
   }
-}
+};
 
 const renderContent = (state, i18, elements) => {
   const { status } = state.uiState;
