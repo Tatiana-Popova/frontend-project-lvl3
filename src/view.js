@@ -106,34 +106,32 @@ const renderPosts = (state, i18, elements) => {
     });
 };
 
-const changeFormaAcessibility = (disable, elements) => {
-  if (!disable) {
-    elements.input.disabled = false;
-    elements.addButton.disabled = false;
-  } else {
+const changeFormaAcessibility = (loadingProcess, elements) => {
+  if (loadingProcess === 'loading') {
     elements.input.disabled = true;
     elements.addButton.disabled = true;
+  } else {
+    elements.input.disabled = false;
+    elements.addButton.disabled = false;
   }
 };
 
 const renderContent = (state, i18, elements) => {
-  const { status } = state.uiState;
-  if (status === 'successDownload' || status === 'markAsRead' || status === 'successDownloadNewPosts') {
+  if (state.posts.length !== 0) {
     renderFeeds(state, elements);
     renderPosts(state, i18, elements);
   }
 };
 
 const renderFeedback = (state, i18, elements) => {
-  if (state.uiState.status === 'successDownloadNewPosts' || state.uiState.status === 'loadingNewPosts') return;
   const { feedback } = elements;
-  const message = state.uiState.inputForm.feedback;
+  const message = state.inputForm.feedback;
   const feedbackText = i18.t(message);
   feedback.textContent = feedbackText;
   const { input } = elements;
   const { inputForm } = elements;
 
-  if (state.uiState.inputForm.valid) {
+  if (state.inputForm.valid) {
     input.classList.remove('is-invalid');
     feedback.classList.remove('text-danger');
     feedback.classList.add('text-success');
@@ -167,4 +165,6 @@ export {
   renderFeedback,
   renderModal,
   changeFormaAcessibility,
+  renderFeeds,
+  renderPosts,
 };

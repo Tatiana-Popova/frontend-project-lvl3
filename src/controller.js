@@ -87,8 +87,6 @@ const uploadNewPosts = (watchedState) => {
 
         const newPosts = _.differenceBy(parsedItems, watchedState.posts.flat(), 'itemLink');
         watchedState.posts = [newPosts.flat(), ...watchedState.posts];
-        watchedState.uiState.status = 'loadingNewPosts';
-        watchedState.uiState.status = 'successDownloadNewPosts';
       })
       .catch(() => {
         console.log('failedDownload');
@@ -107,8 +105,7 @@ export const loadFeed = (i18, watchedState, e) => {
   const url = formData.get('url').trim();
   checkInputValid(i18, watchedState, url)
     .then(() => {
-      watchedState.uiState.inputForm.valid = true;
-      watchedState.uiState.inputForm.disable = true;
+      watchedState.loadingProcess = 'loading';
       return downloadStream(url, watchedState);
     })
     .then((stream) => {
@@ -120,30 +117,30 @@ export const loadFeed = (i18, watchedState, e) => {
         const hasPostsThatPostAlready = checkPostForUniq(watchedState.posts.flat(), item);
         if (!hasPostsThatPostAlready) watchedState.posts = [...watchedState.posts, item];
       });
-      watchedState.uiState.inputForm.feedback = 'feedbackSucсess';
-      watchedState.uiState.status = 'successDownload';
-      watchedState.uiState.inputForm.disable = false;
+      watchedState.inputForm.valid = true;
+      watchedState.inputForm.feedback = 'feedbackSucсess';
+      watchedState.loadingProcess = 'successDownload';
       watchedState.rssUrls.push(url);
       uploadNewPosts(watchedState);
     })
     .catch((error) => {
-      watchedState.uiState.inputForm.disable = false;
-      watchedState.uiState.inputForm.valid = false;
+      watchedState.loadingProcess = 'failedLoading';
+      watchedState.inputForm.valid = false;
       switch (error.type) {
         case ('networkError'):
-          watchedState.uiState.inputForm.feedback = 'networkError';
+          watchedState.inputForm.feedback = 'networkError';
           break;
         case ('parseError'):
-          watchedState.uiState.inputForm.feedback = 'invalidRSS';
+          watchedState.inputForm.feedback = 'invalidRSS';
           break;
         case ('validateError'):
-          watchedState.uiState.inputForm.feedback = error.message;
+          watchedState.inputForm.feedback = error.message;
           break;
         default:
           break;
       }
-      watchedState.uiState.status = error.type;
-      console.log(error.message);
+      watchedState.error = error.type;
+      console.log('error = ', error.message);
     });
 };
 

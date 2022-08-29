@@ -3,10 +3,11 @@ import i18next from 'i18next';
 import resources from './locales/index';
 import 'bootstrap';
 import {
-  renderContent,
   renderFeedback,
   renderModal,
   changeFormaAcessibility,
+  renderFeeds,
+  renderPosts,
 } from './view';
 import {
   loadFeed,
@@ -33,15 +34,15 @@ const app = () => {
     .then(() => {
       const state = {
         uiState: {
-          inputForm: {
-            valid: false,
-            feedback: 'initial',
-            disable: false,
-          },
-          status: 'initial',
           viewedPostLinks: new Set(),
           clickedLink: null,
         },
+        inputForm: {
+          valid: true,
+          feedback: '',
+        },
+        error: '',
+        loadingProcess: 'initial',
         rssUrls: [],
         feeds: [],
         posts: [],
@@ -49,16 +50,22 @@ const app = () => {
 
       const watchedState = onChange(state, (path) => {
         switch (path) {
-          case 'uiState.status':
+          case 'feeds':
+            renderFeeds(state, elements);
+            break;
+          case 'posts':
           case 'uiState.viewedPostLinks':
+            renderPosts(state, i18, elements);
+            break;
+          case 'loadingProcess':
             renderFeedback(state, i18, elements);
-            renderContent(state, i18, elements);
+            changeFormaAcessibility(state.loadingProcess, elements);
+            break;
+          case 'error':
+            renderFeedback(state, i18, elements);
             break;
           case 'uiState.clickedLink':
             renderModal(state);
-            break;
-          case 'uiState.inputForm.disable':
-            changeFormaAcessibility(state.uiState.inputForm.disable, elements);
             break;
           default:
             break;
